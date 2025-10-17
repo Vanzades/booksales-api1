@@ -2,49 +2,85 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Log;
 use App\Models\Genre;
 use Illuminate\Http\Request;
-
+use Illuminate\Http\JsonResponse;
 
 class GenreController extends Controller
 {
-    // READ ALL
-    public function index()
+    // READ ALL (sudah ada)
+    public function index(): JsonResponse
     {
-        try {
-            $genres = \App\Models\Genre::query()
-                ->select('id', 'name', 'created_at', 'updated_at')
-                ->orderBy('id')
-                ->get();
-
-            return response()->json([
-                'success' => true,
-                'data' => $genres,
-            ], 200, [], JSON_UNESCAPED_UNICODE);
-        } catch (\Throwable $e) {
-            Log::error('GET /api/genres failed: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-            ]);
-            return response()->json(
-                ['success' => false, 'message' => 'Internal error on genres index'],
-                500
-            );
-        }
+        return response()->json(['success' => true, 'data' => Genre::all()]);
     }
 
-    // CREATE
-    public function store(Request $request)
+    // CREATE (sudah ada)
+    public function store(Request $request): JsonResponse
     {
         $data = $request->validate(['name' => 'required|string|max:255']);
-
-        $genre = \App\Models\Genre::create($data);
+        $genre = Genre::create($data);
 
         return response()->json([
             'success' => true,
             'message' => 'Genre created',
-            'data' => $genre,
+            'data' => $genre
         ], 201);
+    }
+
+    // 🔎 SHOW (tambahan tugas)
+    public function show($id): JsonResponse
+    {
+        $genre = Genre::find($id);
+        if (!$genre) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Genre not found'
+            ], 404);
+        }
+
+        return response()->json(['success' => true, 'data' => $genre]);
+    }
+
+    // ✏️ UPDATE (tambahan tugas)
+    public function update(Request $request, $id): JsonResponse
+    {
+        $genre = Genre::find($id);
+        if (!$genre) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Genre not found'
+            ], 404);
+        }
+
+        $data = $request->validate([
+            'name' => 'sometimes|required|string|max:255'
+        ]);
+
+        $genre->update($data);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Genre updated',
+            'data' => $genre
+        ]);
+    }
+
+    // 🗑️ DESTROY (tambahan tugas)
+    public function destroy($id): JsonResponse
+    {
+        $genre = Genre::find($id);
+        if (!$genre) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Genre not found'
+            ], 404);
+        }
+
+        $genre->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Genre deleted'
+        ]);
     }
 }

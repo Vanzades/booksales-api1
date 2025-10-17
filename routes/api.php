@@ -4,13 +4,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\GenreController;
 
-// sanity check (opsional)
-Route::get('ping', fn() => response()->json(['pong'=>true]));
+// opsional: health check
+Route::get('ping', fn() => response()->json(['pong' => true]));
 
-// AUTHORS
-Route::get ('authors', [AuthorController::class, 'index']); // READ ALL
-Route::post('authors', [AuthorController::class, 'store']); // CREATE
-
-// GENRES
-Route::get ('genres',  [GenreController::class, 'index']);  // READ ALL
-Route::post('genres',  [GenreController::class, 'store']);  // CREATE
+// CRUD lengkap (index, store, show, update, destroy)
+Route::apiResource('authors', AuthorController::class);
+Route::apiResource('genres',  GenreController::class);
