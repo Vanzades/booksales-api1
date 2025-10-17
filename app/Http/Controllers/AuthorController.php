@@ -7,16 +7,14 @@ use Illuminate\Http\Request;
 
 class AuthorController extends Controller
 {
+    // READ ALL
     public function index()
     {
         $authors = Author::withCount('books')->get();
-
-        return response()->json([
-            'success' => true,
-            'data' => $authors
-        ]);
+        return response()->json(['success'=>true,'data'=>$authors], 200);
     }
 
+    // CREATE
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -26,48 +24,6 @@ class AuthorController extends Controller
         ]);
 
         $author = Author::create($data);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Author created',
-            'data' => $author
-        ], 201);
-    }
-
-    public function show(Author $author)
-    {
-        $author->loadCount('books');
-
-        return response()->json([
-            'success' => true,
-            'data' => $author
-        ]);
-    }
-
-    public function update(Request $request, Author $author)
-    {
-        $data = $request->validate([
-            'name'  => 'sometimes|required|string|max:255',
-            'email' => 'nullable|email|unique:authors,email,' . $author->id,
-            'bio'   => 'nullable|string'
-        ]);
-
-        $author->update($data);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Author updated',
-            'data' => $author
-        ]);
-    }
-
-    public function destroy(Author $author)
-    {
-        $author->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Author deleted'
-        ]);
+        return response()->json(['success'=>true,'message'=>'Author created','data'=>$author], 201);
     }
 }
