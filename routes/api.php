@@ -1,28 +1,45 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\{AuthorController, GenreController, AuthController};
+use App\Http\Controllers\{
+    AuthController,
+    AuthorController,
+    GenreController,
+    TransactionController
+};
 
-Route::get('ping', fn() => response()->json(['pong'=>true]));
-
-// Auth (untuk ambil token)
+// -----------------------------
+//  AUTHENTICATION ROUTES
+// -----------------------------
 Route::post('auth/register', [AuthController::class, 'register']);
-Route::post('auth/login',    [AuthController::class, 'login']);
-Route::post('auth/logout',   [AuthController::class, 'logout'])->middleware('auth:sanctum');
+Route::post('auth/login', [AuthController::class, 'login']);
+Route::post('auth/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
-// PUBLIC (tanpa login): Read All & Show
-Route::get('authors',        [AuthorController::class, 'index']);
-Route::get('authors/{id}',   [AuthorController::class, 'show']);
-Route::get('genres',         [GenreController::class,  'index']);
-Route::get('genres/{id}',    [GenreController::class,  'show']);
+// Optional health check
+Route::get('ping', fn() => response()->json(['pong' => true]));
 
-// ADMIN ONLY: Create, Update, Destroy
-Route::middleware(['auth:sanctum','admin'])->group(function () {
-    Route::post('authors',           [AuthorController::class, 'store']);
-    Route::put('authors/{id}',       [AuthorController::class, 'update']);
-    Route::delete('authors/{id}',    [AuthorController::class, 'destroy']);
+// -----------------------------
+//  PUBLIC ROUTES (tanpa login)
+// -----------------------------
+Route::apiResource('authors', AuthorController::class)->only(['index', 'show']);
+Route::apiResource('genres',  GenreController::class)->only(['index', 'show']);
 
-    Route::post('genres',            [GenreController::class, 'store']);
-    Route::put('genres/{id}',        [GenreController::class, 'update']);
-    Route::delete('genres/{id}',     [GenreController::class, 'destroy']);
+// -----------------------------
+//  ADMIN ROUTES (login + is_admin=true)
+// -----------------------------
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+    // CRUD for authors & genres
+    Route::apiResource('authors', AuthorController::class)->only(['store', 'update', 'destroy']);
+    Route::apiResource('genres',  GenreController::class)->only(['store', 'update', 'destroy']);
+
+    // ADMIN-only for transactions
+    Route::apiResource('transactions', TransactionController::class)->only(['index', 'destroy']);
+});
+
+// -----------------------------
+//  CUSTOMER ROUTES (login + !admin)
+// -----------------------------
+Route::middleware(['auth:sanctum', 'customer'])->group(function () {
+    // CUSTOMER-only for transactions
+    Route::apiResource('transactions', TransactionController::class)->only(['store', 'update', 'show']);
 });
