@@ -5,19 +5,16 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
-    public function up(): void
-    {
+    public function up(): void {
         Schema::create('authors', function (Blueprint $table) {
             $table->id();
-            $table->string('name');              // nama penulis
-            $table->string('email')->nullable()->unique();
-            $table->text('bio')->nullable();     // opsional
+            $table->string('name', 255);
+            $table->string('photo', 255)->nullable(); // simpan path relatif di storage/app/public
+            $table->text('bio')->nullable();
             $table->timestamps();
         });
     }
-
-    public function down(): void
-    {
+    public function down(): void {
         Schema::dropIfExists('authors');
     }
 };

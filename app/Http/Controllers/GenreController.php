@@ -4,83 +4,53 @@ namespace App\Http\Controllers;
 
 use App\Models\Genre;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 
 class GenreController extends Controller
 {
-    // READ ALL (sudah ada)
-    public function index(): JsonResponse
+    public function index()
     {
-        return response()->json(['success' => true, 'data' => Genre::all()]);
+        $genres = Genre::withCount('books')->latest('id')->get();
+        return response()->json(['data' => $genres], 200);
     }
 
-    // CREATE (sudah ada)
-    public function store(Request $request): JsonResponse
+    public function store(Request $request)
     {
-        $data = $request->validate(['name' => 'required|string|max:255']);
-        $genre = Genre::create($data);
+        $validated = $request->validate([
+            'name'        => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+        ]);
+
+        $genre = Genre::create($validated)->loadCount('books');
 
         return response()->json([
             'success' => true,
             'message' => 'Genre created',
-            'data' => $genre
+            'data'    => $genre,
         ], 201);
     }
 
-    // 🔎 SHOW (tambahan tugas)
-    public function show($id): JsonResponse
+    public function show($id)
     {
-        $genre = Genre::find($id);
-        if (!$genre) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Genre not found'
-            ], 404);
-        }
-
-        return response()->json(['success' => true, 'data' => $genre]);
+        $genre = \App\Models\Genre::withCount('books')->findOrFail($id);
+        return response()->json(['data' => $genre]);
     }
 
-    // ✏️ UPDATE (tambahan tugas)
-    public function update(Request $request, $id): JsonResponse
+    public function update(Request $request, $id)
     {
-        $genre = Genre::find($id);
-        if (!$genre) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Genre not found'
-            ], 404);
-        }
-
-        $data = $request->validate([
-            'name' => 'sometimes|required|string|max:255'
+        $genre = \App\Models\Genre::findOrFail($id);
+        $validated = $request->validate([
+            'name' => ['sometimes', 'required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
         ]);
-
-        $genre->update($data);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Genre updated',
-            'data' => $genre
-        ]);
+        $genre->fill($validated)->save();
+        $genre->loadCount('books');
+        return response()->json(['success' => true, 'message' => 'Genre updated', 'data' => $genre]);
     }
 
-    // 🗑️ DESTROY (tambahan tugas)
-    public function destroy($id): JsonResponse
+    public function destroy($id)
     {
-        $genre = Genre::find($id);
-        if (!$genre) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Genre not found'
-            ], 404);
-        }
-
+        $genre = \App\Models\Genre::findOrFail($id);
         $genre->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Genre deleted'
-        ]);
+        return response()->json(['success' => true, 'message' => 'Genre deleted']);
     }
 }

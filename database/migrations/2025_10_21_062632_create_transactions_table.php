@@ -5,25 +5,19 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
-    public function up(): void
-    {
+    public function up(): void {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
-
-            // relasi ke users & books
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('book_id')->constrained()->cascadeOnDelete();
-
-            $table->unsignedInteger('quantity');
-            $table->unsignedBigInteger('total_price');       // simpan dalam satuan terkecil (mis. rupiah)
-            $table->string('status')->default('pending');     // pending|paid|cancelled (opsional)
-
+            $table->string('order_number', 25)->unique();
+            $table->foreignId('customer_id')->constrained('users')->cascadeOnUpdate()->restrictOnDelete();
+            $table->foreignId('book_id')->constrained('books')->cascadeOnUpdate()->restrictOnDelete();
+            $table->decimal('total_amount', 10, 2);
             $table->timestamps();
+
+            $table->index(['customer_id', 'book_id']);
         });
     }
-
-    public function down(): void
-    {
+    public function down(): void {
         Schema::dropIfExists('transactions');
     }
 };
